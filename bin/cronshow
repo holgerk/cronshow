@@ -1,0 +1,104 @@
+#!/usr/bin/env node
+/*jshint asi:true */
+
+var fs = require('fs')
+  , util = require('util')
+  , args = require('commander')
+  , colors = require('colors')
+  , cronshow = require('..')
+
+if (!process.stdout.isTTY) { colors.mode = 'none' }
+
+args
+  .version(require('../package').version)
+  .usage('[options] [file]')
+  .option('-s, --scope [day]', 'Period under observation: day, week, month or year', 'day')
+  .option('-H, --hour [hour]', 'Start hour', parseInt)
+  .parse(process.argv)
+
+var noFile = (args.args.length < 1)
+if (noFile) {
+  readStdIn(function (content) { main(content) })
+} else {
+  main(fs.readFileSync(args.args[0]))
+}
+
+function main(content) {
+  try {
+    var options = getOptions()
+
+    cronshow.startDate = new Date(options.startTime)
+    cronshow.endDate = new Date(options.startTime + options.endTime)
+    cronshow.resolution = options.resolution
+    cronshow.headerType = options.headerType
+    cronshow.headerDistance = options.headerDistance
+
+    var lines = content.toString().trim().split("\n");
+    var jobs = cronshow.createJobs(lines)
+    render(jobs, options)
+  } catch (e) {
+    error(e.message)
+  }
+}
+
+function render(jobs, options) {
+  process.stdout.write(cronshow.renderHeader().inverse + '\n')
+  for (var i in jobs) {
+    var job = jobs[i]
+    var line = cronshow.renderLine(job) 
+    var even = 1
+    for (var c = 0; c < line.length; c += options.headerDistance) {
+      var chunk = line.substr(c, options.headerDistance)
+      if (even) {
+        chunk = '\033[40m' + chunk + '\033[0m'
+      }
+      process.stdout.write(chunk);
+      even = 1 - even;
+    }
+    process.stdout.write(' ' + job.shortName() + '\n')
+  }
+}
+
+function getOptions() {
+  if (cronshow[args.scope.toUpperCase()] == undefined) {
+    error('Unsupported scope: %s', args.scope.bold)
+  }
+
+  var defaultsByScope = {
+    hour : {resolution: 1  * cronshow.MINUTE    , headerType: 'Minutes'  , headerDistance: 5},
+    day  : {resolution: 20 * cronshow.MINUTE    , headerType: 'Hours'    , headerDistance: 3},
+    week : {resolution: 3  * cronshow.HOUR      , headerType: 'DayOfWeek', headerDistance: 8},
+    month: {resolution: 8  * cronshow.HOUR      , headerType: 'Date'     , headerDistance: 3},
+    year : {resolution: cronshow.YEAR / (12 * 8), headerType: 'Month'    , headerDistance: 8},
+  }
+  var options = defaultsByScope[args.scope]
+
+  options.startTime = 0
+  options.endTime = cronshow[args.scope.toUpperCase()]
+
+  if (args.hour) {
+    startTime = args.hour * cronshow.HOUR
+  }
+
+  return options
+}
+
+function readStdIn(callback) {
+  var content = ''
+  process.stdin.resume()
+  process.stdin.on('data', function (chunk) {
+    content += chunk
+  })
+  process.stdin.on('end', function () {
+    callback(content)
+  })
+}
+
+function error(message) {
+  console.log(util.format.apply(null, [].slice.call(arguments)).red + '')
+  args.help()
+}
+
+/* 
+vim: ft=javascript 
+*/

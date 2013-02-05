@@ -1,0 +1,32 @@
+{
+  "name": "cronshow",
+  "version": "1.0.0-alpha",
+  "description": "Command line tool to visualize crontab entries.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {
+    "colors": "~0.6.0-1",
+    "commander": "~1.1.1"
+  },
+  "devDependencies": {
+    "ntest": "~0.0.2"
+  },
+  "scripts": {
+    "test": "ntest tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holgerk/cronshow.git"
+  },
+  "keywords": [
+    "cron",
+    "crontab"
+  ],
+  "bin": {
+    "cronshow": "bin/cronshow"
+  },
+  "author": "Holger Kohnen",
+  "license": "MIT"
+}
