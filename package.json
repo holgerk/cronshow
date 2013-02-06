@@ -1,6 +1,6 @@
 {
   "name": "cronshow",
-  "version": "1.0.0-alpha",
+  "version": "1.0.1",
   "description": "Command line tool to visualize crontab entries.",
   "main": "index.js",
   "directories": {
